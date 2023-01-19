@@ -1,0 +1,15 @@
+# 1.分区表长度+校验至少为0x1000大小 4K
+# 2.出厂程序需要烧录在0x10000 大小的偏移处  64K
+# 3.需要在0x10000处存放一个标记为factory的文件，启动器默认加载这个应用程序
+# 4.定义两个数据区域，分别用于存储NVS库专用分区和PHY初始化数据
+# 5.offset字段可以为空，将自动计算
+# 6.Name字段命名随意，不能超过16字节，包含空字节
+# 7.Type字段指定为data(0x01)或者app(0x00)或者任意自定义分区类型(0x40~0xfe之间的数字，其他数字为保留)
+# 8.SubType字段：当Type为app时，可以是factory(0x00),ota_0(0x10),...,ota_15(0x1f),test(0x20);参考https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/api-guides/partition-tables.html
+#               当Type为data是，可以是ota(0x00),phy(0x01),nvs(0x02),nvs_keys(0x04)或者其他子类型；参考链接同上
+# Name,   Type, SubType, Offset,  Size, Flags
+nvs,      data, nvs,     0x9000,  0x6000,
+phy_init, data, phy,     0xf000,  0x1000,
+factory,  app,  factory, 0x10000, 1M,
+font,     0x40, 0x01,    ,        1200k,
+storage,  data, spiffs,  ,        1M,
