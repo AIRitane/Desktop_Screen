@@ -4,6 +4,7 @@ idf_component_register(
                          "../bsp/https_request.c"
                          "../bsp/wifi.c"
                          "../bsp/http_request.c"
+                         "../bsp/uc8151d.c"
 
                     INCLUDE_DIRS "."
                                  "../application"
