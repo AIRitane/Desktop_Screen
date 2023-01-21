@@ -122,8 +122,8 @@ int start_http_request(http_request_t *http_request)
         http_request->data_handler(rx_buffer,len);
         rx_buffer[ret] = '\0';
         close(s);
-        ESP_LOGI(TAG, "接收到的数据：%s", rx_buffer);
-        ESP_LOGI(TAG, "接收到的数据长度：%d", ret);
+        // ESP_LOGI(TAG, "接收到的数据：%s", rx_buffer);
+        // ESP_LOGI(TAG, "接收到的数据长度：%d", ret);
     }
     return ESP_OK;
 }

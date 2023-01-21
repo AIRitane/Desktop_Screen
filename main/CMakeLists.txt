@@ -6,6 +6,8 @@ idf_component_register(
                          "../bsp/http_request.c"
                          "../bsp/uc8151d.c"
                          "../bsp/myfont.c"
+                         "../bsp/js.c"
+                         "../bsp/sntp.c"
 
                     INCLUDE_DIRS "."
                                  "../application"
@@ -14,4 +16,4 @@ idf_component_register(
                     # EMBED_TXTFILES server_root_cert.pem
                     )
                     
-                    spiffs_create_partition_image(storage ../spiffs FLASH_IN_PROJECT)
+                    # spiffs_create_partition_image(storage ../spiffs FLASH_IN_PROJECT)

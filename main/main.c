@@ -4,39 +4,93 @@
 #include "freertos/task.h"
 
 #include <string.h>
-#include "uc8151d.h"
+#include "https_request.h"
+#include "http_request.h"
+#include "beep.h"
+#include "wifi.h"
+#include "js.h"
+#include "sntp.h"
 
 const static char *TAG = "MAIN APP";
 
-TaskHandle_t ucTask_Handle = NULL;
-#define UC_TASK_HEAP 10000
+#define WIFI_SSID "li"
+#define WIFI_PASS "123456789"
 
-static void uc8151d_task(void *arg);
+// https_request_t one;
+// char host[] = "https://www.ooopn.com";
+// uint16_t port = 443;
+// char web_path[] = "https://www.ooopn.com/tool/api/yan/api.php?type=json";
 
-void app_main(void)
+// http://quan.suning.com/getSysTime.do
+https_request_t one;
+char host[] = "https://api.uukit.com";
+uint16_t port = 443;
+char web_path[] = "https://api.uukit.com/time";
+// yiketianqi_t _yiketianqi;
+
+// void data_handler(const char *data, size_t len)
+// {
+//     // yiketianqi_js(data,&_yiketianqi);
+//     // printf("%s\n", _yiketianqi.air);
+//     // printf("%s\n", _yiketianqi.city);
+//     // printf("%s\n", _yiketianqi.humidity);
+//     // printf("%s\n", _yiketianqi.pressure);
+//     // printf("%s\n", _yiketianqi.tem);
+//     // printf("%s\n", _yiketianqi.tem_day);
+//     // printf("%s\n", _yiketianqi.tem_night);
+//     // printf("%s\n", _yiketianqi.wea);
+//     // printf("%s\n", _yiketianqi.wea_img);
+//     // printf("%s\n", _yiketianqi.win);
+//     // printf("%s\n", _yiketianqi.win_meter);
+//     // printf("%s\n", _yiketianqi.win_speed);
+//     printf("%s\n",data);
+// }
+
+void data_handler(struct esp_tls *tls, const char *data, size_t len)
 {
-    int buffer_sz = 0;
-    xTaskCreatePinnedToCore(uc8151d_task, "uc8151d_task", UC_TASK_HEAP, NULL, 10, ucTask_Handle, 1);
+    // char buf[200];
+    // one_js(data,buf);
+    printf("%s\n", data);
+}
 
-    while (1)
+void on_wifi_callback(wifi_event_type_t event)
+{
+    if (event == EVENT_GOT_IP)
     {
-        buffer_sz = UC_TASK_HEAP - uxTaskGetStackHighWaterMark(ucTask_Handle);
-        ESP_LOGI(TAG, "buffer_sz = %d", buffer_sz);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // one.host = host;
+        // one.port = port;
+        // one.web_path = web_path;
+        // one.data_handler = data_handler;
+
+        // vTaskDelay(1000 / portTICK_PERIOD_MS);
+        // start_https_request(&one);
+        time_t now;
+        struct tm timeinfo;
+        time(&now);
+        localtime_r(&now, &timeinfo);
+        // Is time set? If not, tm_year will be (1970 - 1900).
+        if (timeinfo.tm_year < (2000 - 1900))
+            obtain_time();
     }
 }
 
-static void uc8151d_task(void *arg)
+void app_main(void)
 {
-    char image[5000] = {0};
-    char li[1000] = "一ge淑h哈哈凤凰\n大家是否@33斤4；【sdk】few仍无法";
-    // ESP_LOGW(TAG,"%s",li);
-    screen_init();
-    screen_show_chinese(image, 0, 0, li, 1);
-    screen_full_display(image);
+    static wifi_t wifi = {
+        .ssid = WIFI_SSID,
+        .password = WIFI_PASS,
+        .mode = WIFI_MODE_STA,
+        .netif = NULL,
+        .callback = on_wifi_callback};
+    beep_init();
+    wifi_start(&wifi);
+
+    sntp_time_t sntp_time;
     while (1)
     {
-        // printf("ok\n");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        sntp_time_fresh(&sntp_time);
+
+        send_beep_event(BEEP_SHORT_100MS);
+        vTaskDelay(20000 / portTICK_PERIOD_MS);
     }
 }

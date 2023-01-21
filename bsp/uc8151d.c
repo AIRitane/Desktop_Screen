@@ -13,7 +13,7 @@
 
 spi_device_handle_t spi;
 /*************************************管脚配置**************************************/
-void screen_gpio_init()
+static void screen_gpio_init()
 {
     gpio_config_t io_conf;
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
@@ -38,7 +38,7 @@ void screen_gpio_init()
 }
 
 /*************************************SPI部分**************************************/
-void screen_spi_init(void)
+static void screen_spi_init(void)
 {
     esp_err_t ret;
     spi_bus_config_t buscfg = {
@@ -64,7 +64,7 @@ void screen_spi_init(void)
     ESP_ERROR_CHECK(ret);
 }
 
-void spi_send_cmd(uint8_t cmd)
+static void spi_send_cmd(uint8_t cmd)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -80,7 +80,7 @@ void spi_send_cmd(uint8_t cmd)
     assert(ret == ESP_OK); // Should have had no issues.
 }
 
-void spi_send_data(uint8_t data)
+static void spi_send_data(uint8_t data)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -124,7 +124,7 @@ void deep_sleep(void) // Enter deep sleep mode
     vTaskDelay(100 / portTICK_PERIOD_MS);
 }
 
-void init_display()
+static void init_display()
 {
     vTaskDelay(10 / portTICK_PERIOD_MS);
     gpio_set_level(PIN_RST, 0);
@@ -372,24 +372,25 @@ void screen_draw_wide_rectangle(char *buf, uint16_t x0, uint16_t y0, uint16_t x1
     }
 }
 
-void screen_pic_overlay(char *pic, uint16_t x, uint16_t y, uint16_t width, uint16_t high, char *background)
-{
-    for (uint16_t i = 0; i < width / 8; i++)
-    {
-        for (uint16_t j = 0; j < high; j++)
-        {
-            // uint16_t index;
-            *(pic + i + 25 * j) = *(background + i + j);
+// void screen_pic_overlay(char *pic, uint16_t x, uint16_t y, uint16_t width, uint16_t high, char *background)
+// {
+//     for (uint16_t i = 0; i < width / 8; i++)
+//     {
+//         for (uint16_t j = 0; j < high; j++)
+//         {
+//             // uint16_t index;
+//             *(pic + i + 25 * j) = *(background + i + j);
 
-            // if (*(pic+))
-            // {
-            //     /* code */
-            // }
-        }
-    }
-}
+//             // if (*(pic+))
+//             // {
+//             //     /* code */
+//             // }
+//         }
+//     }
+// }
+
 /*************************************汉字UI驱动**************************************/
-uint8_t UTF8toUnicode(uint8_t *ch, uint16_t *_unicode)
+static uint8_t UTF8toUnicode(uint8_t *ch, uint16_t *_unicode)
 {
     uint8_t *p = NULL, n = 0;
     uint32_t e = 0;
@@ -518,4 +519,5 @@ void screen_show_chinese(char *buf, uint16_t x, uint16_t y, const char *str, uin
         else
             en_num++;
     }
+    free(stri);
 }
