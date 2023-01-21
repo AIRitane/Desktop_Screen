@@ -6,7 +6,7 @@
 #define TAG "JS"
 
 /******************************************工具函数解析********************************************/
-//查找匹配函数
+// 查找匹配函数
 static int find_str(char source[], char searchfor[])
 {
     int k = 0;
@@ -32,7 +32,7 @@ static int find_str(char source[], char searchfor[])
 }
 
 /******************************************一言js解析********************************************/
-void one_js(char *str,char *buf)
+void one_js(char *str, char *buf)
 {
     char *ret;
     ret = strchr(str, '{');
@@ -58,44 +58,70 @@ void one_js(char *str,char *buf)
     {
         ESP_LOGE(TAG, "解析JS失败");
     }
+    cJSON_Delete(pJsonRoot);
 }
 
 /******************************************天气js解析********************************************/
-void yiketianqi_js(char *str,yiketianqi_t *buf)
+void yiketianqi_js(char *str, yiketianqi_t *buf)
 {
     char *ret;
     ret = strchr(str, '{');
     cJSON *pJsonRoot = cJSON_Parse(ret);
     if (pJsonRoot != NULL)
     {
-        cJSON *pCityAdress = cJSON_GetObjectItem(pJsonRoot, "city"); // 解析c字段字符串内容
-        cJSON *pWeaAdress = cJSON_GetObjectItem(pJsonRoot, "wea"); // 解析c字段字符串内容
-        cJSON *pWea_imgAdress = cJSON_GetObjectItem(pJsonRoot, "wea_img"); // 解析c字段字符串内容
-        cJSON *pTemAdress = cJSON_GetObjectItem(pJsonRoot, "tem"); // 解析c字段字符串内容
-        cJSON *pTem_dayAdress = cJSON_GetObjectItem(pJsonRoot, "tem_day"); // 解析c字段字符串内容
+        cJSON *pCityAdress = cJSON_GetObjectItem(pJsonRoot, "city");           // 解析c字段字符串内容
+        cJSON *pWeaAdress = cJSON_GetObjectItem(pJsonRoot, "wea");             // 解析c字段字符串内容
+        cJSON *pWea_imgAdress = cJSON_GetObjectItem(pJsonRoot, "wea_img");     // 解析c字段字符串内容
+        cJSON *pTemAdress = cJSON_GetObjectItem(pJsonRoot, "tem");             // 解析c字段字符串内容
+        cJSON *pTem_dayAdress = cJSON_GetObjectItem(pJsonRoot, "tem_day");     // 解析c字段字符串内容
         cJSON *pTem_nightAdress = cJSON_GetObjectItem(pJsonRoot, "tem_night"); // 解析c字段字符串内容
-        cJSON *pWinAdress = cJSON_GetObjectItem(pJsonRoot, "win"); // 解析c字段字符串内容
+        cJSON *pWinAdress = cJSON_GetObjectItem(pJsonRoot, "win");             // 解析c字段字符串内容
         cJSON *pWin_speedAdress = cJSON_GetObjectItem(pJsonRoot, "win_speed"); // 解析c字段字符串内容
         cJSON *pWin_meterAdress = cJSON_GetObjectItem(pJsonRoot, "win_meter"); // 解析c字段字符串内容
-        cJSON *pAirAdress = cJSON_GetObjectItem(pJsonRoot, "air"); // 解析c字段字符串内容
-        cJSON *pPressureAdress = cJSON_GetObjectItem(pJsonRoot, "pressure"); // 解析c字段字符串内容
-        cJSON *pHumidityAdress = cJSON_GetObjectItem(pJsonRoot, "humidity"); // 解析c字段字符串内容
-        strcpy(buf->city, pCityAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->wea, pWeaAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->wea_img, pWea_imgAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->tem, pTemAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->tem_day, pTem_dayAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->tem_night, pTem_nightAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->win, pWinAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->win_speed, pWin_speedAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->win_meter, pWin_meterAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->air, pAirAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->pressure, pPressureAdress->valuestring); // 拷贝内容到字符串数组
-        strcpy(buf->humidity, pHumidityAdress->valuestring); // 拷贝内容到字符串数组
+        cJSON *pAirAdress = cJSON_GetObjectItem(pJsonRoot, "air");             // 解析c字段字符串内容
+        cJSON *pPressureAdress = cJSON_GetObjectItem(pJsonRoot, "pressure");   // 解析c字段字符串内容
+        cJSON *pHumidityAdress = cJSON_GetObjectItem(pJsonRoot, "humidity");   // 解析c字段字符串内容
+        strcpy(buf->city, pCityAdress->valuestring);                           // 拷贝内容到字符串数组
+        strcpy(buf->wea, pWeaAdress->valuestring);                             // 拷贝内容到字符串数组
+        strcpy(buf->wea_img, pWea_imgAdress->valuestring);                     // 拷贝内容到字符串数组
+        strcpy(buf->tem, pTemAdress->valuestring);                             // 拷贝内容到字符串数组
+        strcpy(buf->tem_day, pTem_dayAdress->valuestring);                     // 拷贝内容到字符串数组
+        strcpy(buf->tem_night, pTem_nightAdress->valuestring);                 // 拷贝内容到字符串数组
+        strcpy(buf->win, pWinAdress->valuestring);                             // 拷贝内容到字符串数组
+        strcpy(buf->win_speed, pWin_speedAdress->valuestring);                 // 拷贝内容到字符串数组
+        strcpy(buf->win_meter, pWin_meterAdress->valuestring);                 // 拷贝内容到字符串数组
+        strcpy(buf->air, pAirAdress->valuestring);                             // 拷贝内容到字符串数组
+        strcpy(buf->pressure, pPressureAdress->valuestring);                   // 拷贝内容到字符串数组
+        strcpy(buf->humidity, pHumidityAdress->valuestring);                   // 拷贝内容到字符串数组
     }
     else
     {
         ESP_LOGE(TAG, "解析JS失败");
     }
+    cJSON_Delete(pJsonRoot);
 }
 
+/******************************************单词解析********************************************/
+void word_js(char *str, char *buf)
+{
+    char *ret;
+    ret = strchr(str, '{');
+    cJSON *pJsonRoot = cJSON_Parse(ret);
+    if (pJsonRoot != NULL)
+    {
+        cJSON *pDataAdress = cJSON_GetObjectItem(pJsonRoot, "data");        // 解析c字段字符串内容
+        cJSON *pEntiesAdress = cJSON_GetObjectItem(pDataAdress, "entries"); // 解析c字段字符串内容
+        // ESP_LOGI(TAG,"%d",cJSON_GetArraySize(pEntiesAdress));
+        cJSON *pEntiesArreyAdress = cJSON_GetArrayItem(pEntiesAdress, 0); // 解析c字段字符串内容
+        cJSON *pExplainAdress = cJSON_GetObjectItem(pEntiesArreyAdress, "explain");
+        // ESP_LOGI(TAG, "%s", pExplainAdress->valuestring);
+
+        strcpy(buf, pExplainAdress->valuestring);
+    }
+    else
+    {
+        ESP_LOGE(TAG, "解析JS失败");
+    }
+
+    cJSON_Delete(pJsonRoot);
+}

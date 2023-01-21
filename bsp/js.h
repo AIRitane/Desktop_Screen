@@ -26,5 +26,6 @@ typedef struct
 
 void one_js(char *str,char *buf);
 void yiketianqi_js(char *str,yiketianqi_t *buf);
+void word_js(char *str,char *buf);
 
 #endif

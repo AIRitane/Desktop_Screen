@@ -15,7 +15,7 @@
 #define TAG "HTTPS_REQUESRT"
 
 #define DEFAULT_PATH "/"
-#define HTTPS_REQUEST_RX_BUFFER_SIZE 800
+#define HTTPS_REQUEST_RX_BUFFER_SIZE 1000
 #define HTTPS_REQUEST_PAYLOAD_BUFFER_SIZE 256
 
 static const char* request_payload_template = "GET %s HTTP/1.0\r\nHost: %s:%s\r\nUser-Agent:esp-idf/1.0 esp32\r\n\r\n";
