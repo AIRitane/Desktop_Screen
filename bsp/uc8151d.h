@@ -19,9 +19,16 @@
 void screen_init();
 void screen_full_display(char *buf);
 void screen_partial_display(unsigned int x_start, unsigned int y_start, char *buf, unsigned int PART_COLUMN, unsigned int PART_LINE);
-void screen_set_ram(char * buf);
+void screen_set_ram(char *buf);
 void refresh_part();
-void deep_sleep();;
-/*************************************基本UI驱动**************************************/
+void deep_sleep();
 
-#endif //LVGL_DEMO_UC8151D_H
+/*************************************基本UI驱动**************************************/
+void screen_draw_point(char *buf, uint16_t x, uint16_t y, uint8_t color);
+void screen_draw_fill(char *buf, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color);
+void screen_draw_line(char *buf, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t color);
+void screen_draw_rectangle(char *buf, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t color);
+void screen_draw_wide_rectangle(char *buf, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t width, uint8_t color);
+/*************************************汉字UI驱动**************************************/
+void screen_show_chinese(char *buf, uint16_t x, uint16_t y, const char *str, uint16_t color);
+#endif // LVGL_DEMO_UC8151D_H

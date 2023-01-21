@@ -7,11 +7,11 @@
 #include <driver/spi_master.h>
 
 #include "uc8151d.h"
+#include "myfont.h"
 
 #define TAG "UC8151D"
 
 spi_device_handle_t spi;
-
 /*************************************管脚配置**************************************/
 void screen_gpio_init()
 {
@@ -64,7 +64,7 @@ void screen_spi_init(void)
     ESP_ERROR_CHECK(ret);
 }
 
-void spi_send_cmd(const uint8_t cmd)
+void spi_send_cmd(uint8_t cmd)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -80,7 +80,7 @@ void spi_send_cmd(const uint8_t cmd)
     assert(ret == ESP_OK); // Should have had no issues.
 }
 
-void spi_send_data(const uint8_t data)
+void spi_send_data(uint8_t data)
 {
     esp_err_t ret;
     spi_transaction_t t;
@@ -267,7 +267,7 @@ void screen_partial_display(unsigned int x_start, unsigned int y_start, char *bu
     spi_send_cmd(0x24); // Write Black and White image to RAM
     for (int i = 0; i < PART_COLUMN * PART_LINE / 8; i++)
     {
-        spi_send_data(buf);
+        spi_send_data(*(buf + i));
     }
 }
 
@@ -278,4 +278,244 @@ void screen_init()
 }
 
 /*************************************基本UI驱动**************************************/
+void screen_draw_point(char *buf, uint16_t x, uint16_t y, uint8_t color)
+{
+    if (x > 200 || y > 200)
+    {
+        ESP_LOGE(TAG, "像素超限,检查算法");
+        return;
+    }
 
+    uint16_t x_i, x_o;
+    x_o = x % 8;
+    x_i = x / 8;
+
+    uint16_t index;
+    index = y * 25 + x_i;
+    if (color)
+        *(buf + index) = (*(buf + index) | (0x80 >> x_o));
+    else
+        *(buf + index) = (*(buf + index) & (~(0x80 >> x_o)));
+}
+
+void screen_draw_fill(char *buf, uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint8_t color)
+{
+    for (size_t i = 0; i < x2 - x1; i++)
+    {
+        for (size_t j = 0; j < y2 - y1; j++)
+        {
+            screen_draw_point(buf, x1 + i, y1 + j, color);
+        }
+    }
+}
+
+void screen_draw_line(char *buf, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t color)
+{
+    int dx = x1 - x0 >= 0 ? x1 - x0 : x0 - x1;
+    int sx = x0 < x1 ? 1 : -1;
+    int dy = y1 - y0 <= 0 ? y1 - y0 : y0 - y1;
+    int sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+
+    if (x0 == x1 || y0 == y1)
+    {
+        for (int i = 0; i <= dx; i++)
+        {
+            for (int j = 0; j <= -dy; j++)
+            {
+                screen_draw_point(buf, x0 + i, y0 + j, color);
+            }
+        }
+        return;
+    }
+
+    while ((x0 != x1) && (y0 != y1))
+    {
+        screen_draw_point(buf, x0, y0, color);
+        if (2 * err >= dy)
+        {
+            err += dy;
+            x0 += sx;
+        }
+        if (2 * err <= dx)
+        {
+            err += dx;
+            y0 += sy;
+        }
+    }
+}
+
+void screen_draw_rectangle(char *buf, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t color)
+{
+    int min_x, min_y, max_x, max_y;
+    min_x = x1 > x0 ? x0 : x1;
+    max_x = x1 > x0 ? x1 : x0;
+    min_y = y1 > y0 ? y0 : y1;
+    max_y = y1 > y0 ? y1 : y0;
+    screen_draw_line(buf, min_x, min_y, max_x, min_y, color);
+    screen_draw_line(buf, min_x, max_y, max_x, max_y, color);
+    screen_draw_line(buf, min_x, min_y, min_x, max_y, color);
+    screen_draw_line(buf, max_x, min_y, max_x, max_y, color);
+}
+
+void screen_draw_wide_rectangle(char *buf, uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1, uint8_t width, uint8_t color)
+{
+    int min_x, min_y, max_x, max_y;
+    min_x = x1 > x0 ? x0 : x1;
+    max_x = x1 > x0 ? x1 : x0;
+    min_y = y1 > y0 ? y0 : y1;
+    max_y = y1 > y0 ? y1 : y0;
+
+    for (uint8_t i = 0; i < width; i++)
+    {
+        screen_draw_rectangle(buf, min_x + i, min_y + i, max_x - i, max_y - i, color);
+    }
+}
+
+void screen_pic_overlay(char *pic, uint16_t x, uint16_t y, uint16_t width, uint16_t high, char *background)
+{
+    for (uint16_t i = 0; i < width / 8; i++)
+    {
+        for (uint16_t j = 0; j < high; j++)
+        {
+            // uint16_t index;
+            *(pic + i + 25 * j) = *(background + i + j);
+
+            // if (*(pic+))
+            // {
+            //     /* code */
+            // }
+        }
+    }
+}
+/*************************************汉字UI驱动**************************************/
+uint8_t UTF8toUnicode(uint8_t *ch, uint16_t *_unicode)
+{
+    uint8_t *p = NULL, n = 0;
+    uint32_t e = 0;
+    p = ch;
+    if (1) // p == NULL
+    {
+        if (*p >= 0xfc)
+        {
+            /*6:<11111100>*/
+            e = (p[0] & 0x01) << 30;
+            e |= (p[1] & 0x3f) << 24;
+            e |= (p[2] & 0x3f) << 18;
+            e |= (p[3] & 0x3f) << 12;
+            e |= (p[4] & 0x3f) << 6;
+            e |= (p[5] & 0x3f);
+            n = 6;
+        }
+        else if (*p >= 0xf8)
+        {
+            /*5:<11111000>*/
+            e = (p[0] & 0x03) << 24;
+            e |= (p[1] & 0x3f) << 18;
+            e |= (p[2] & 0x3f) << 12;
+            e |= (p[3] & 0x3f) << 6;
+            e |= (p[4] & 0x3f);
+            n = 5;
+        }
+        else if (*p >= 0xf0)
+        {
+            /*4:<11110000>*/
+            e = (p[0] & 0x07) << 18;
+            e |= (p[1] & 0x3f) << 12;
+            e |= (p[2] & 0x3f) << 6;
+            e |= (p[3] & 0x3f);
+            n = 4;
+        }
+        else if (*p >= 0xe0)
+        {
+            /*3:<11100000>*/
+            e = (p[0] & 0x0f) << 12;
+            e |= (p[1] & 0x3f) << 6;
+            e |= (p[2] & 0x3f);
+            n = 3;
+        }
+        else if (*p >= 0xc0)
+        {
+            /*2:<11000000>*/
+            e = (p[0] & 0x1f) << 6;
+            e |= (p[1] & 0x3f);
+            n = 2;
+        }
+        else
+        {
+            e = p[0];
+            n = 1;
+        }
+        *_unicode = e;
+    }
+    return n;
+}
+
+void screen_show_chinese(char *buf, uint16_t x, uint16_t y, const char *str, uint16_t color)
+{
+    // 汉字三个字节
+    // 复制备份
+    char *stri;
+    stri = (char *)malloc(strlen(str) + 1);
+    memcpy(stri, str, strlen(str));
+    *(stri + strlen(str)) = '\0';
+
+    // 设置显示偏移
+    uint16_t en_num = 0, ch_num = 0;
+    uint16_t off_ix, off_iy;
+    off_ix = x;
+    off_iy = y;
+
+    // 解析字体      横向自左到右
+    uint16_t unic;
+    uint8_t bitmap[87];
+    uint8_t box_w = 0, box_h = 0;
+    int8_t offset_x = 0, offset_y = 0;
+    while (1)
+    {
+        if (*(stri + en_num + ch_num * 3) == '\0')
+        {
+            // ESP_LOGW(TAG, "OK!");
+            break;
+        }
+
+        if (*(stri + en_num + ch_num * 3) == '\t')
+            *(stri + en_num + ch_num * 3) = ' ';
+
+        UTF8toUnicode((uint8_t *)(stri + en_num + ch_num * 3), &unic);
+        lvgl_get_bitmap(unic, bitmap, &box_w, &box_h, &offset_x, &offset_y);
+
+        if (off_ix + box_w + offset_x > 200 || *(stri + en_num + ch_num * 3) == '\n')
+        {
+            off_ix = 0;
+            off_iy += FONT_LINE_HEIGHT;
+        }
+
+        off_ix += offset_x;
+        uint16_t index, offset;
+        uint8_t pix;
+        // 只取色彩空间第一位，因此色彩空间尽可能小以换取空间
+        for (uint16_t i = 0; i < box_h; i++)
+        {
+            for (uint16_t j = 0; j < box_w; j++)
+            {
+                index = i * box_w + j; //  已使用像素数量
+                // offset = (index % (8 / FONT_BPP)) * FONT_BPP;
+                offset = 8 - (index % (8 / FONT_BPP)) * FONT_BPP - FONT_BPP;
+                pix = (*(bitmap + index / (8 / FONT_BPP))) & (0x01 << offset);
+                if (color)
+                    pix = pix != 0 ? 1 : 0;
+                else
+                    pix = pix != 0 ? 0 : 1;
+
+                // 画该像素点
+                screen_draw_point(buf, off_ix + j, off_iy + FONT_LINE_HEIGHT - offset_y - box_h + i, pix);
+            }
+        }
+        off_ix = off_ix + FONT_GAP + box_w;
+        if (*(stri + en_num + ch_num * 3) > 128)
+            ch_num++;
+        else
+            en_num++;
+    }
+}
