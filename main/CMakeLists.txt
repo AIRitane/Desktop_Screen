@@ -9,6 +9,7 @@ idf_component_register(
                          "../bsp/js.c"
                          "../bsp/sntp.c"
                          "../application/api.c"
+                         "../bsp/tp.c"
 
                     INCLUDE_DIRS "."
                                  "../application"

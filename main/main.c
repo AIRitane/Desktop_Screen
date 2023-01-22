@@ -11,6 +11,9 @@
 #include "js.h"
 #include "sntp.h"
 #include "api.h"
+#include "tp.h"
+#include "driver/timer.h"
+#include "esp_timer.h"
 
 const static char *TAG = "MAIN APP";
 sntp_time_t * _time_;
@@ -18,13 +21,41 @@ yiketianqi_t* weather;
 char *word;
 char *one;
 
+// static void tp_timer_init();
 void app_main(void)
 {
     beep_init();
-    // api_init();
-
+    // tp_timer_init();
     while (1)
     {
+        // send_beep_event(BEEP_SHORT_100MS);
+        vTaskDelay(100 / portTICK_PERIOD_MS);
+    }
+}
+
+// esp_timer_handle_t esp_timer_handle;
+
+// void tp_timer_callback(void *arg)
+// {
+//    send_beep_event(BEEP_SHORT_100MS);
+// }
+
+// static void tp_timer_init()
+// {
+//     esp_timer_create_args_t fw_timer = {
+// 			.callback = &tp_timer_callback, //定时器回调函数
+// 			.arg = NULL,
+// 			.name = "beep_timer", //定时器名称
+// 	};
+ 
+// 	esp_err_t err = esp_timer_create(&fw_timer,&esp_timer_handle);
+// 	err = esp_timer_start_periodic(esp_timer_handle,1000*1000*60); //us级定时，1000*1000=1s
+// 	if(err!=ESP_OK){
+// 		ESP_LOGE(TAG,"TP定时器初始化错误");
+// 	}
+// }
+
+ // api_init();
         // if (get_if_connect())
         // {
         //     send_api_event(API_TIME);
@@ -42,8 +73,3 @@ void app_main(void)
         //     word = get_api_word();
         //     printf("%s\n",word);
         // }
-        
-        send_beep_event(BEEP_SHORT_100MS);
-        vTaskDelay(20000 / portTICK_PERIOD_MS);
-    }
-}

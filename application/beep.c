@@ -31,15 +31,11 @@ static void beep_stop()
 static void beep_task(void *arg)
 {
     uint32_t evt;
-    int buffer_sz = 0;
+    // int buffer_sz = 0;
     for (;;)
     {
-        buffer_sz = BEEP_TASK_HEAP - uxTaskGetStackHighWaterMark(beepTask_Handle);
-        if (buffer_sz <= 400)
-        {
-            ESP_LOGW(TAG,"beep堆栈剩余大小 = %d\n", buffer_sz);
-        }
-        
+        // buffer_sz = uxTaskGetStackHighWaterMark(beepTask_Handle);
+        // ESP_LOGW(TAG,"beep堆栈剩余大小 = %d\n", buffer_sz);
         if (xQueueReceive(beep_queue, &evt, portMAX_DELAY))
         {
             if (evt == BEEP_SHORT_100MS)
