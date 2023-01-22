@@ -29,7 +29,7 @@ void obtain_time(void)
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
-    if (retry > retry_count)
+    if (retry >= retry_count)
     {
         ESP_LOGE(TAG, "SNTP初始化失败");
     }
@@ -65,10 +65,10 @@ void sntp_time_fresh(sntp_time_t *sntp_time)
     strftime(sntp_time->min, sizeof(sntp_time->min), "%M", &timeinfo);
     strftime(sntp_time->sec, sizeof(sntp_time->sec), "%S", &timeinfo);
 
-    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->year);
-    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->mon);
-    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->week);
-    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->hour);
-    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->min);
-    ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->sec);
+    // ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->year);
+    // ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->mon);
+    // ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->week);
+    // ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->hour);
+    // ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->min);
+    // ESP_LOGI(TAG, "The current date/time in Shanghai is: %s", sntp_time->sec);
 }

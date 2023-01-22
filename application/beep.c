@@ -2,7 +2,6 @@
 #include "freertos/task.h"
 #include "esp_log.h"
 #include "driver/mcpwm.h"
-#include "freertos/task.h"
 #include "freertos/queue.h"
 #include "beep.h"
 
