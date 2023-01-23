@@ -16,20 +16,22 @@
 #include "esp_timer.h"
 
 const static char *TAG = "MAIN APP";
-sntp_time_t * _time_;
-yiketianqi_t* weather;
-char *word;
-char *one;
+// sntp_time_t * _time_;
+// yiketianqi_t* weather;
+// char *word;
+// char *one;
+TouchPoint_T *one;
 
-// static void tp_timer_init();
 void app_main(void)
 {
     beep_init();
-    // tp_timer_init();
+    screen_tp_init();
     while (1)
     {
+        one = get_touch_point();
+        printf("%d %d %d %d %d %d\n",one->even,one->geste,one->last_x,one->last_y,one->x[0],one->y[0]);
         // send_beep_event(BEEP_SHORT_100MS);
-        vTaskDelay(100 / portTICK_PERIOD_MS);
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
 

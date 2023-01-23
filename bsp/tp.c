@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include "driver/i2c.h"
 #include "esp_err.h"
 #include "esp_log.h"
@@ -8,9 +9,10 @@
 #include "tp.h"
 
 #define TAG "TP"
+#define _abs(x) ((x > 0) ? (x) : (-x))
 
+TouchPoint_T _gTPS;
 TouchPoint_T gTPS;
-
 // #define I2C_SDA_PIN 33
 // #define I2C_SCL_PIN 32
 // #define I2C_FREQ_HZ 100000
@@ -108,22 +110,97 @@ static void scan_ft6336()
     uint8_t buf[4] = {0};
     i2c_master_read_slave(0x02, &sta, 1);
 
-    gTPS.sta = sta;
-    for (uint8_t i = 0; i < 2; i++)
+    _gTPS.sta = sta;
+    // for (uint8_t i = 0; i < 2; i++)
+    // {
+    //     _gTPS.x[i] = 0;
+    //     _gTPS.y[i] = 0;
+    // }
+    if (sta)
     {
-        gTPS.x[i] = 0;
-        gTPS.y[i] = 0;
+        for (uint8_t i = 0; i < sta; i++)
+        {
+            i2c_master_read_slave(0X03 + 0x06 * i, buf, 4);
+            _gTPS.x[i] = ((uint16_t)(buf[0] & 0X0F) << 8) | buf[1];
+            _gTPS.y[i] = ((uint16_t)(buf[2] & 0X0F) << 8) | buf[3];
+            _gTPS.even = (buf[0] & 0xc0) >> 6;
+        }
     }
-    for (uint8_t i = 0; i < sta; i++)
+    else
     {
-        i2c_master_read_slave(0X03 + 0x06 * i, buf, 4);
-        gTPS.x[i] = ((uint16_t)(buf[0] & 0X0F) << 8) | buf[1];
-        gTPS.y[i] = ((uint16_t)(buf[2] & 0X0F) << 8) | buf[3];
+        i2c_master_read_slave(0X03, buf, 4);
+        _gTPS.even = (buf[0] & 0xc0) >> 6;
+    }
+}
+
+uint32_t count = 0;
+uint32_t last_count = 0;
+int deltax, deltay;
+int32_t delta_time;
+uint8_t tp_in_flag;
+static void event_ft6336()
+{
+    // 只解析一个点的单击、双击左右滑问题
+    count++;
+    if (_gTPS.even == 0x02 && tp_in_flag == 0)
+    {
+        deltax = _gTPS.x[0];
+        deltay = _gTPS.y[0];
+        _gTPS.last_x = _gTPS.x[0];
+        _gTPS.last_y = _gTPS.y[0];
+        last_count = count;
+        tp_in_flag = 1;
+    }
+    if (_gTPS.even == 0x01 && tp_in_flag == 1)
+    {
+        deltax -= _gTPS.x[0];
+        deltay -= _gTPS.y[0];
+        delta_time = count - last_count;
+        if (_abs(deltax) < TP_CLICKED_DEL && _abs(deltay) < TP_CLICKED_DEL)
+        {
+            if (delta_time > TP_CLICKED_GAP)
+            {
+                _gTPS.geste = TP_LONG_CLICKED;
+            }
+            else
+            {
+                _gTPS.geste = TP_CLICKED;
+            }
+        }
+        else
+        {
+            if (_abs(deltax) > abs(deltay))
+            {
+                if (deltax > 0)
+                {
+                    _gTPS.geste = TP_LEFT;
+                }
+                else
+                {
+                    _gTPS.geste = TP_RIGHT;
+                }
+            }
+            else
+            {
+                if (deltay > 0)
+                {
+                    _gTPS.geste = TP_UP;
+                }
+                else
+                {
+                    _gTPS.geste = TP_DOWEN;
+                }
+            }
+        }
+        tp_in_flag = 0;
+        count = 0;
     }
 }
 
 TouchPoint_T *get_touch_point()
 {
+    memcpy(&gTPS, &_gTPS, sizeof(gTPS));
+    _gTPS.geste = TP_NONE;
     return &gTPS;
 }
 
@@ -137,22 +214,24 @@ esp_timer_handle_t esp_timer_handle;
 
 void tp_timer_callback(void *arg)
 {
-   scan_ft6336();
+    scan_ft6336();
+    event_ft6336();
 }
 
 static void tp_timer_init()
 {
     esp_timer_create_args_t fw_timer = {
-			.callback = &tp_timer_callback, //定时器回调函数
-			.arg = NULL,
-			.name = "tp_timer", //定时器名称
-	};
- 
-	esp_err_t err = esp_timer_create(&fw_timer,&esp_timer_handle);
-	err = esp_timer_start_periodic(esp_timer_handle,1000*10); //us级定时，1000*1000=1s
-	if(err!=ESP_OK){
-		ESP_LOGE(TAG,"TP定时器初始化错误");
-	}
+        .callback = &tp_timer_callback, // 定时器回调函数
+        .arg = NULL,
+        .name = "tp_timer", // 定时器名称
+    };
+
+    esp_err_t err = esp_timer_create(&fw_timer, &esp_timer_handle);
+    err = esp_timer_start_periodic(esp_timer_handle, 1000 * 10); // us级定时，1000*1000=1s
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "TP定时器初始化错误");
+    }
 }
 
 static void gpio_ini_rst_init()
@@ -199,5 +278,6 @@ void screen_tp_init()
     // 中断产生方式 持续电平
     i2c_master_write_slave(0xA4, &w_data, 1);
 
+    gTPS.geste = TP_NONE;
     tp_timer_init();
 }

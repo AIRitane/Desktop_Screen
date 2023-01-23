@@ -15,13 +15,31 @@
 #define ACK_VAL 0x0       /*!< I2C ack value */
 #define NACK_VAL 0x1
 
+#define TP_CLICKED_DEL 5
+#define TP_CLICKED_GAP 30
+
 #include "esp_err.h"
+
+typedef enum
+{
+    TP_UP = 0,
+    TP_DOWEN,
+    TP_LEFT,
+    TP_RIGHT,
+    TP_CLICKED,
+    TP_LONG_CLICKED,
+    TP_NONE,
+} geste_e;
 
 typedef struct
 {
     uint8_t sta;
-    uint16_t x[2];       // 最多支持5点触摸，需要使用5组坐标存储触摸点数据
+    uint8_t even;
+    geste_e geste;
+    uint16_t x[2]; // 最多支持5点触摸，需要使用5组坐标存储触摸点数据
     uint16_t y[2];
+    uint8_t last_x;
+    uint8_t last_y;
 } TouchPoint_T;
 
 void screen_tp_init();
