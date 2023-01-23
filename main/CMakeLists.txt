@@ -10,10 +10,13 @@ idf_component_register(
                          "../bsp/sntp.c"
                          "../application/api.c"
                          "../bsp/tp.c"
+                         "../ui/algorithm.c"
+                         "../ui/ssqt.c"
 
                     INCLUDE_DIRS "."
                                  "../application"
                                  "../bsp"
+                                 "../ui"
 
                     # EMBED_TXTFILES server_root_cert.pem
                     )

@@ -1,29 +1,65 @@
 #ifndef __SSQT_H
 #define __SSQT_H
 
+#include "algorithm.h"
+#include <stdint.h>
+
+// 组件
 typedef struct
 {
     uint8_t x;
     uint8_t y;
     uint8_t width;
     uint8_t hight;
-    char *txt;  //只用做文字距离边缘x=0,y=center
-    char *img;  //图片在文字下方刷新
-    //sq_widget_t *parent; 指向控件或者页面
-    //链表孩子保存
-    //信号与槽函数
-}sq_widget_t;
+    char *txt;
+    uint8_t txt_offsetx;
+    uint8_t txt_offsety;
+    char *img;
+    uint8_t img_offsetx;
+    uint8_t img_offsety;
 
-/*
-按钮：背景，文字
-*/
+    signal_t *clicked;
+    signal_t *long_clicked;
+    signal_t *left_swipe;
+    signal_t *right_swipe;
+    signal_t *up_swipe;
+    signal_t *down_swipe;
+} sq_widget_t;
+
+// 页面
+typedef struct __sq_node sq_node_t;
+struct __sq_node
+{
+    sq_widget_t *data;
+    sq_node_t *next;
+};
+
 typedef struct
 {
-    //控件第一个孩子指针
-    //缓冲区
-}sq_page_t;
+    sq_node_t *widget;
+    uint8_t buf[5000];
+} sq_page_t;
 
-//切换页面需要全屏刷
-//页面内部局部刷
-//检测左右滑动与单击双击事件
+// APP管理
+typedef struct __sq_pnode sq_pnode_t;
+struct __sq_pnode
+{
+    sq_page_t *data;
+    sq_pnode_t *next;
+};
+
+typedef struct
+{
+    sq_pnode_t *page;
+} sq_app_t;
+
+sq_app_t *sq_creat_app();
+void sq_app_page_add(sq_app_t *app, sq_page_t *page);
+void delete_app_page(sq_app_t *app, sq_page_t *page);
+
+sq_page_t *creat_page();
+sq_widget_t *creat_widget(sq_page_t *page);
+void delete_page(sq_page_t *page);
+void delete_widget(sq_page_t *page, sq_widget_t *widget);
+
 #endif
