@@ -102,5 +102,5 @@ void beep_init(void)
     // create a queue to handle gpio event from isr
     beep_queue = xQueueCreate(10, sizeof(uint32_t));
     // start gpio task
-        xTaskCreatePinnedToCore(beep_task, "beep_task", BEEP_TASK_HEAP, NULL, 10, beepTask_Handle,1);
+    xTaskCreatePinnedToCore(beep_task, "beep_task", BEEP_TASK_HEAP, NULL, 10, beepTask_Handle, 1);
 }

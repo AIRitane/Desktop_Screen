@@ -10,7 +10,7 @@ static node_t *new_slot_link(slot_t data)
     return head;
 }
 // 信号初始化
-signal_t *signal()
+signal_t *Qsignal()
 {
     signal_t *s = (signal_t *)malloc(sizeof(signal_t));
     s->slot = (node_t *)malloc(sizeof(node_t));
@@ -19,7 +19,7 @@ signal_t *signal()
 }
 
 // 添加槽函数
-void connect(signal_t *_signal, slot_t _slot)
+void Qconnect(signal_t *_signal, slot_t _slot)
 {
     node_t *p;
     p = _signal->slot;
@@ -41,6 +41,8 @@ void emit(signal_t *_signal)
         slot_t func = p->next->data;
         if (func != NULL)
             func();
+
+        p = p->next;
     }
 }
 

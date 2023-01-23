@@ -51,6 +51,7 @@ struct __sq_pnode
 typedef struct
 {
     sq_pnode_t *page;
+    sq_pnode_t *sel_page;
 } sq_app_t;
 
 sq_app_t *sq_creat_app();
@@ -61,5 +62,7 @@ sq_page_t *creat_page();
 sq_widget_t *creat_widget(sq_page_t *page);
 void delete_page(sq_page_t *page);
 void delete_widget(sq_page_t *page, sq_widget_t *widget);
+void set_sel_page(sq_app_t *app,sq_page_t *page);
 
+void ssqt_init(sq_app_t *app);
 #endif

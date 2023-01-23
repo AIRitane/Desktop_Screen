@@ -20,8 +20,8 @@ typedef struct
     node_t *slot;
 } signal_t;
 
-signal_t *signal();
-void connect(signal_t *_signal, slot_t _slot);
+signal_t *Qsignal();
+void Qconnect(signal_t *_signal, slot_t _slot);
 void emit(signal_t *_signal);
 void del(signal_t *_signal);
 
