@@ -372,22 +372,27 @@ void screen_draw_wide_rectangle(char *buf, uint16_t x0, uint16_t y0, uint16_t x1
     }
 }
 
-// void screen_pic_overlay(char *pic, uint16_t x, uint16_t y, uint16_t width, uint16_t high, char *background)
-// {
-//     for (uint16_t i = 0; i < width / 8; i++)
-//     {
-//         for (uint16_t j = 0; j < high; j++)
-//         {
-//             // uint16_t index;
-//             *(pic + i + 25 * j) = *(background + i + j);
-
-//             // if (*(pic+))
-//             // {
-//             //     /* code */
-//             // }
-//         }
-//     }
-// }
+void screen_pic_overlay(char *buf, char *pic, uint16_t x, uint16_t y, uint16_t width, uint16_t high)
+{
+    if (x + width > 200 || y + high > 200)
+    {
+        ESP_LOGE(TAG,"图片尺寸超限");
+        return;
+    }
+    // 宽是8的倍数，高随意
+    uint16_t index;
+    for (uint8_t i = 0; i < high; i++)
+    {
+        for (uint8_t j = 0; j < width / 8; j++)
+        {
+            index = j + width / 8 * i;
+            for (uint8_t k = 0; k < 8; k++)
+            {
+                screen_draw_point(buf, x + j * 8 + k, y + i, *(pic + index) & (0x80 >> k));
+            }
+        }
+    }
+}
 
 /*************************************汉字UI驱动**************************************/
 static uint8_t UTF8toUnicode(uint8_t *ch, uint16_t *_unicode)
