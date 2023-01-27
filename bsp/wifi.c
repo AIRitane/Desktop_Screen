@@ -23,7 +23,7 @@
 #include "esp_http_server.h"
 #include "wifi.h"
 
-#define WIFI_TASK_HEAP 10000
+#define WIFI_TASK_HEAP 20000
 #define WIFI_CONNECT_MAXIMUM_RETRY 10
 
 #define TAG "WIFI"
@@ -67,7 +67,7 @@ void nvs_save_wifi_info(char *key, void *val, uint8_t mode)
     }
     else if (mode == 2)
     {
-        ESP_ERROR_CHECK(nvs_set_u32(nvs_handle, key, (uint32_t *)val));
+        ESP_ERROR_CHECK(nvs_set_u32(nvs_handle, key, *(uint32_t *)val));
     }
 
     ESP_ERROR_CHECK(nvs_commit(nvs_handle));
@@ -93,12 +93,11 @@ NVS_WIFI_INFO_E nvs_read_wifi_info(char **ssid, char **psw,char *city,uint32_t *
     uint8_t wifi_flag = 0;
     size_t len=20;
     nvs_get_u8(nvs_handle, "wifi_flag", &wifi_flag);
-    ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "ssid", *ssid, &ssid_len));
-    ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "psw", *psw, &psw_len));
-    ESP_ERROR_CHECK(nvs_get_str(nvs_handle, "addr", city, &len));
-    ESP_ERROR_CHECK(nvs_get_u32(nvs_handle, "toma_wt", toma_wt));
-    ESP_ERROR_CHECK(nvs_get_u32(nvs_handle, "toma_rt", toma_rt));
-
+    (nvs_get_str(nvs_handle, "ssid", *ssid, &ssid_len));
+    (nvs_get_str(nvs_handle, "psw", *psw, &psw_len));
+    (nvs_get_str(nvs_handle, "city", city, &len));
+    (nvs_get_u32(nvs_handle, "toma_wt", toma_wt));
+    (nvs_get_u32(nvs_handle, "toma_rt", toma_rt));
     nvs_close(nvs_handle);
     if (wifi_flag == NVS_WIFI_INFO_SAVE)
     {
@@ -173,9 +172,6 @@ void wifi_start(wifi_t *wifi)
 
     // 复制SSID到配置对象中，SSID长度为33个字符
     // 如果SSID过长，将截断，将导致无法连接上WiFi网络
-    printf("%s\n", wifi->ssid);
-    printf("%s\n", wifi->password);
-
     size_t ssid_len = strlen(wifi->ssid);
     if (ssid_len > 33)
     {
@@ -277,19 +273,19 @@ char _html[3000] = {0};
 
 void get_html_buf()
 {
-    esp_vfs_spiffs_conf_t conf = {
-        .base_path = "/spiffs",
-        .partition_label = NULL,
-        .max_files = 5,
-        .format_if_mount_failed = false};
+    // esp_vfs_spiffs_conf_t conf = {
+    //     .base_path = "/spiffs",
+    //     .partition_label = NULL,
+    //     .max_files = 5,
+    //     .format_if_mount_failed = false};
 
-    // 挂载注册
-    esp_err_t ret = esp_vfs_spiffs_register(&conf);
-    if (ret != ESP_OK)
-    {
-        ESP_LOGE(TAG, "磁盘挂载失败");
-        return;
-    }
+    // // 挂载注册
+    // esp_err_t ret = esp_vfs_spiffs_register(&conf);
+    // if (ret != ESP_OK)
+    // {
+    //     ESP_LOGE(TAG, "磁盘挂载失败");
+    //     return;
+    // }
     // 读取
     FILE *f = fopen("/spiffs/login.html", "r");
     if (f == NULL)
@@ -452,19 +448,18 @@ void wifi_event_task(void *params)
         {
             if (evt == WIFI_USER_LOG_SUCEESS)
             {
-                printf("%s\n", user_info.ssid);
-                printf("%s\n", user_info.psw);
-                printf("%s\n", user_info.addr);
-                printf("%d\n", user_info.toma_wt);
-                printf("%d\n", user_info.toma_rt);
+                if (wifi->callback != NULL)
+                {
+                    wifi->callback(EVENT_USER_LOGIN);
+                }
                 uint8_t val;
                 val = NVS_WIFI_INFO_SAVE;
                 nvs_save_wifi_info("wifi_flag", &val, 0);
                 nvs_save_wifi_info("ssid", user_info.ssid, 1);
                 nvs_save_wifi_info("psw", user_info.psw, 1);
                 nvs_save_wifi_info("city", user_info.addr, 1);
-                nvs_save_wifi_info("toma_wt", user_info.toma_wt, 2);
-                nvs_save_wifi_info("toma_rt", user_info.toma_rt, 2);
+                nvs_save_wifi_info("toma_wt", &user_info.toma_wt, 2);
+                nvs_save_wifi_info("toma_rt", &user_info.toma_rt, 2);
 
                 size_t ssid_len = strlen(user_info.ssid);
                 memcpy(wifi_cfg.sta.ssid, user_info.ssid, ssid_len);
@@ -475,11 +470,6 @@ void wifi_event_task(void *params)
                 s_retry_num = 0;
                 esp_wifi_start();
                 esp_wifi_connect();
-
-                if (wifi->callback != NULL)
-                {
-                    wifi->callback(EVENT_USER_LOGIN);
-                }
             }
             if (evt == WIFI_NO_PASSWORLD)
             {
@@ -529,6 +519,7 @@ void wifi_event_task(void *params)
                 }
             }
         }
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 

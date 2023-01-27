@@ -15,12 +15,13 @@
 #define TAG "HTTPS_REQUESRT"
 
 #define DEFAULT_PATH "/"
-#define HTTPS_REQUEST_RX_BUFFER_SIZE 1000
+#define HTTPS_REQUEST_RX_BUFFER_SIZE 5000
 #define HTTPS_REQUEST_PAYLOAD_BUFFER_SIZE 256
 
 static const char* request_payload_template = "GET %s HTTP/1.0\r\nHost: %s:%s\r\nUser-Agent:esp-idf/1.0 esp32\r\n\r\n";
 
-
+char request_payload[HTTPS_REQUEST_PAYLOAD_BUFFER_SIZE];
+char rx_buffer[HTTPS_REQUEST_RX_BUFFER_SIZE];
 int start_https_request(https_request_t* https_request){
 
 	// ESP_LOGI(TAG,"start_https_request:start...");
@@ -60,7 +61,6 @@ int start_https_request(https_request_t* https_request){
 	}
 
 	// 构造HTTPS请求头
-	char request_payload[HTTPS_REQUEST_PAYLOAD_BUFFER_SIZE];
 	sprintf(request_payload,request_payload_template,
 				https_request->web_path,https_request->host,port_str);
     // ESP_LOGI(TAG,"start_https_request:request payload:\n%s",request_payload);
@@ -84,7 +84,6 @@ int start_https_request(https_request_t* https_request){
      } while (written_bytes < sizeof(request_payload));
 
     // ESP_LOGI(TAG, "reading HTTP response...");
-    char rx_buffer[HTTPS_REQUEST_RX_BUFFER_SIZE];
     int len,ret;
     do {
             len = sizeof(rx_buffer) - 1;

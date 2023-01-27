@@ -12,6 +12,8 @@ typedef enum
     API_WORD
 } API_TYPE_E;
 
+extern uint8_t is_connect;
+
 void set_api_local(char *local);
 void set_api_word(char *word);
 char *get_api_one();

@@ -19,6 +19,17 @@
 #define CONNECT_HTTP_IP     "192.168.2.1"
 #define CONNECT_HTTP_GW     "192.168.2.1"
 #define CONNECT_HTTP_MASK   "255.255.255.0"
+
+typedef struct
+{
+    char ssid[64];
+    char psw[64];
+    char addr[20];
+    uint32_t toma_wt;
+    uint32_t toma_rt;
+} user_info_t;
+
+extern user_info_t user_info;
 /**
  * @brief WiFi事件类型
  * */

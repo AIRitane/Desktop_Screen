@@ -36,12 +36,12 @@ typedef struct
 } glyph_dsc_t;
 
 static x_header_t __g_xbf_hd = {
-    .min = 0x000a,
-    .max = 0x9fa0,
+    .min = 0x0009,
+    .max = 0xffe5,
     .bpp = 1,
 };
 
-static uint8_t __g_font_buf[87]; // 如bin文件存在SPI FLASH可使用此buff
+static uint8_t __g_font_buf[290]; // 如bin文件存在SPI FLASH可使用此buff
 static uint8_t flag = 0;
 FILE *f;
 static uint8_t *user_font_getdata(int offset, int size)
@@ -111,6 +111,7 @@ static const uint8_t *user_font_get_bitmap(uint32_t pos, int size)
 int lvgl_get_bitmap(uint32_t letter, uint8_t *bitmap_buf, uint8_t *box_w, uint8_t *box_h, int8_t *offset_x, int8_t *offset_y)
 {
     glyph_dsc_t gdsc;
+    uint32_t ret;
     uint32_t pos = user_font_get_glyph_dsc(letter, &gdsc);
     if (pos != 0)
     {
@@ -119,10 +120,10 @@ int lvgl_get_bitmap(uint32_t letter, uint8_t *bitmap_buf, uint8_t *box_w, uint8_
         *box_h = gdsc.box_h;
         *offset_x = gdsc.ofs_x;
         *offset_y = gdsc.ofs_y;
-        user_font_get_bitmap(pos, size);
+        ret = user_font_get_bitmap(pos, size);
         memcpy(bitmap_buf, __g_font_buf, size);
 
-        return gdsc.adv_w;
+        return ret;
     }
     return 0;
 }

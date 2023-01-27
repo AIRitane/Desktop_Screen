@@ -211,10 +211,9 @@ void screen_set_ram(char *buf)
     {
         spi_send_data(*(buf + i));
     }
-    refresh();
-    deep_sleep();
 }
 
+//局部刷新暂时无法使用
 /*
  *PART_COLUMN   :正面看，为图片高
  *PART_LINE     :正面看，为图片宽
@@ -282,7 +281,7 @@ void screen_draw_point(char *buf, uint16_t x, uint16_t y, uint8_t color)
 {
     if (x > 200 || y > 200)
     {
-        ESP_LOGE(TAG, "像素超限,检查算法");
+        // ESP_LOGE(TAG, "像素超限,检查算法");
         return;
     }
 
@@ -463,8 +462,7 @@ void screen_show_chinese(char *buf, uint16_t x, uint16_t y, const char *str, uin
     // 复制备份
     char *stri;
     stri = (char *)malloc(strlen(str) + 1);
-    memcpy(stri, str, strlen(str));
-    *(stri + strlen(str)) = '\0';
+    memcpy(stri, str, strlen(str)+1);
 
     // 设置显示偏移
     uint16_t en_num = 0, ch_num = 0;
@@ -474,14 +472,14 @@ void screen_show_chinese(char *buf, uint16_t x, uint16_t y, const char *str, uin
 
     // 解析字体      横向自左到右
     uint16_t unic;
-    uint8_t bitmap[87];
+    uint8_t bitmap[290];
     uint8_t box_w = 0, box_h = 0;
     int8_t offset_x = 0, offset_y = 0;
+    uint32_t ret;
     while (1)
     {
         if (*(stri + en_num + ch_num * 3) == '\0')
         {
-            // ESP_LOGW(TAG, "OK!");
             break;
         }
 
@@ -489,7 +487,12 @@ void screen_show_chinese(char *buf, uint16_t x, uint16_t y, const char *str, uin
             *(stri + en_num + ch_num * 3) = ' ';
 
         UTF8toUnicode((uint8_t *)(stri + en_num + ch_num * 3), &unic);
-        lvgl_get_bitmap(unic, bitmap, &box_w, &box_h, &offset_x, &offset_y);
+        ret=lvgl_get_bitmap(unic, bitmap, &box_w, &box_h, &offset_x, &offset_y);
+        if (ret == 0)
+        {
+            continue;
+        }
+        
 
         if (off_ix + box_w + offset_x > 200 || *(stri + en_num + ch_num * 3) == '\n')
         {

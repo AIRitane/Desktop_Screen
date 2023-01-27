@@ -12,6 +12,7 @@ idf_component_register(
                          "../bsp/tp.c"
                          "../ui/algorithm.c"
                          "../ui/ssqt.c"
+                         "../ui/page.c"
 
                     INCLUDE_DIRS "."
                                  "../application"

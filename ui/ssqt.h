@@ -37,7 +37,7 @@ struct __sq_node
 typedef struct
 {
     sq_node_t *widget;
-    uint8_t buf[5000];
+    char buf[5000];
 } sq_page_t;
 
 // APP管理

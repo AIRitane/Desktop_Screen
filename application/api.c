@@ -19,35 +19,6 @@ static xQueueHandle api_queue = NULL;
 TaskHandle_t apiTask_Handle = NULL;
 uint8_t is_connect = 0;
 
-/*******************************wifi封装******************************************/
-void on_wifi_callback(wifi_event_type_t event)
-{
-    switch (event)
-    {
-    case EVENT_GOT_IP:
-        obtain_time();
-        is_connect = 1;
-        break;
-    case EVENT_DISCONNECT:
-        is_connect = 0;
-        break;
-    default:
-        is_connect = 0;
-        break;
-    }
-}
-
-void net_work_start()
-{
-    static wifi_t wifi = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PASS,
-        .mode = WIFI_MODE_STA,
-        .netif = NULL,
-        .callback = on_wifi_callback};
-    wifi_start(&wifi);
-}
-
 /*******************************接口API封装******************************************/
 /*******************************参数设置函数**************************/
 char weather_web_path_base[200] = "/free/day?appid=59273188&appsecret=WKGR79FN&unescape=1&city=";
@@ -194,7 +165,6 @@ static void api_task(void *arg)
 /*******************************API初始化函数******************************************/
 void api_init()
 {
-    net_work_start();
     api_queue = xQueueCreate(10, sizeof(uint32_t));
     xTaskCreatePinnedToCore(api_task, "api_task", API_TASK_HEAP, NULL, 5, apiTask_Handle, 0);
 }

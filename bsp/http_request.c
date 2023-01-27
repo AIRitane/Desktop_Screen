@@ -6,8 +6,11 @@
 #define TAG "HTTP_REQUESRT"
 
 #define DEFAULT_PATH "/"
-#define HTTP_REQUEST_RX_BUFFER_SIZE 800
+#define HTTP_REQUEST_RX_BUFFER_SIZE 5000
 #define HTTP_REQUEST_PAYLOAD_BUFFER_SIZE 256
+
+char request_payload[HTTP_REQUEST_PAYLOAD_BUFFER_SIZE];
+char rx_buffer[HTTP_REQUEST_RX_BUFFER_SIZE];
 
 static const char* request_payload_template = "GET %s HTTP/1.0\r\nHost: %s:%s\r\nUser-Agent:esp-idf/1.0 esp32\r\n\r\n";
 
@@ -46,7 +49,6 @@ int start_http_request(http_request_t *http_request)
 
     struct addrinfo *res;
     int s;
-    char request_payload[HTTP_REQUEST_PAYLOAD_BUFFER_SIZE];
     sprintf(request_payload, request_payload_template,
             http_request->web_path, http_request->host, port_str);
 
@@ -97,7 +99,6 @@ int start_http_request(http_request_t *http_request)
     }
 
     // 读取
-    char rx_buffer[HTTP_REQUEST_RX_BUFFER_SIZE];
     int len, ret;
     len = sizeof(rx_buffer) - 1;
     // 清空缓存

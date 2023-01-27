@@ -13,7 +13,7 @@
 
 static xQueueHandle touch_queue = NULL;
 TaskHandle_t touchTask_Handle = NULL;
-#define TOUCH_TASK_HEAP 2048
+#define TOUCH_TASK_HEAP 20000
 
 esp_timer_handle_t esp_timer_handle;
 TouchPoint_T *touch;
@@ -32,6 +32,12 @@ sq_widget_t *creat_widget(sq_page_t *page)
 {
     sq_widget_t *widget = (sq_widget_t *)malloc(sizeof(sq_widget_t));
     sq_node_t *node = (sq_node_t *)malloc(sizeof(sq_node_t));
+    widget->clicked = NULL;
+    widget->left_swipe = NULL;
+    widget->right_swipe = NULL;
+    widget->up_swipe = NULL;
+    widget->down_swipe = NULL;
+    widget->long_clicked = NULL;
     node->data = widget;
     node->next = NULL;
     sq_node_t *p;
@@ -175,13 +181,13 @@ static void touch_task(void *arg)
 {
     sq_app_t *app = (sq_app_t *)arg;
     uint32_t evt;
-    // int buffer_sz = 0;
+    int buffer_sz = 0;
     sq_widget_t *sel_widge = NULL;
     while (1)
     {
         sel_widge = NULL;
-        // buffer_sz = uxTaskGetStackHighWaterMark(touchTask_Handle);
-        // ESP_LOGW(TAG, "touch堆栈剩余大小 = %d\n", buffer_sz);
+        buffer_sz = uxTaskGetStackHighWaterMark(touchTask_Handle);
+        ESP_LOGW(TAG, "touch堆栈剩余大小 = %d\n", buffer_sz);
         if (xQueueReceive(touch_queue, &evt, portMAX_DELAY))
         {
             if (app == NULL)
@@ -226,27 +232,46 @@ static void touch_task(void *arg)
             switch (*event)
             {
             case TP_UP:
-                emit(sel_widge->up_swipe);
+                if (sel_widge->up_swipe != NULL)
+                {
+                    emit(sel_widge->up_swipe);
+                }
                 break;
             case TP_DOWEN:
-                emit(sel_widge->down_swipe);
+                if (sel_widge->down_swipe != NULL)
+                {
+                    emit(sel_widge->down_swipe);
+                }
                 break;
             case TP_LEFT:
-                emit(sel_widge->left_swipe);
+                if (sel_widge->left_swipe != NULL)
+                {
+                    emit(sel_widge->left_swipe);
+                }
                 break;
             case TP_RIGHT:
-                emit(sel_widge->right_swipe);
+                if (sel_widge->right_swipe != NULL)
+                {
+                    emit(sel_widge->right_swipe);
+                }
                 break;
             case TP_CLICKED:
-                emit(sel_widge->clicked);
+                if (sel_widge->clicked != NULL)
+                {
+                    emit(sel_widge->clicked);
+                }
                 break;
             case TP_LONG_CLICKED:
-                emit(sel_widge->long_clicked);
+                if (sel_widge->long_clicked != NULL)
+                {
+                    emit(sel_widge->long_clicked);
+                }
                 break;
             default:
                 break;
             }
         }
+        vTaskDelay(100 / portTICK_PERIOD_MS);
     }
 }
 
